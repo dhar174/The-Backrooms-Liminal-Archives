@@ -287,58 +287,65 @@ const App: React.FC = () => {
     const hiddenDetail = currentNode?.data?.hiddenDetail || null;
 
     // 3. Generate Content
-    if (isNoclip) {
-        // NOCLIP GENERATION
-         result = await generateGameTurn(context, nextNarratives, {
-            isNoclip: true,
-            // We pass hiddenDetail if lucky enough to generate one, though node is unvisited
-            hiddenDetail: null 
-         });
-    }
-    else if (forcedEntity && !currentNode.visited) {
-        // NEW ENCOUNTER
-        result = await generateGameTurn(context, recentNarratives, {
-            forceEncounter: forcedEntity,
-            existingRoomNarrative: null,
-            hiddenDetail
-        });
-    } 
-    else if (currentNode && currentNode.visited && !isLookAround && !isCombat && !isItemAction && !forcedLoot) {
-        // VISITED NODE (Standard Revisit, no new events)
-        if (currentNode.entityType && currentNode.entityType !== EntityType.None) {
-             if (forcedEntity) {
-                 result = await generateGameTurn(context, recentNarratives, {
-                    existingRoomNarrative: currentNode.data?.narrative || null,
-                    entityPersistence: 'still_here',
-                    hiddenDetail
-                 });
-             } else {
-                 result = await generateGameTurn(context, recentNarratives, {
-                    existingRoomNarrative: currentNode.data?.narrative || null,
-                    entityPersistence: 'gone',
-                    hiddenDetail
-                 });
-             }
-        } else {
-            // Totally clean node
-            result = { ...currentNode.data! };
-            reusedFromCache = true;
-            if (result.event === 'item_found' || result.event === 'level_transport') {
-                result.event = 'none';
-                result.eventDetail = '';
+    try {
+        if (isNoclip) {
+            // NOCLIP GENERATION
+            result = await generateGameTurn(context, nextNarratives, {
+                isNoclip: true,
+                // We pass hiddenDetail if lucky enough to generate one, though node is unvisited
+                hiddenDetail: null 
+            });
+        }
+        else if (forcedEntity && !currentNode.visited) {
+            // NEW ENCOUNTER
+            result = await generateGameTurn(context, recentNarratives, {
+                forceEncounter: forcedEntity,
+                existingRoomNarrative: null,
+                hiddenDetail
+            });
+        } 
+        else if (currentNode && currentNode.visited && !isLookAround && !isCombat && !isItemAction && !forcedLoot) {
+            // VISITED NODE (Standard Revisit, no new events)
+            if (currentNode.entityType && currentNode.entityType !== EntityType.None) {
+                if (forcedEntity) {
+                    result = await generateGameTurn(context, recentNarratives, {
+                        existingRoomNarrative: currentNode.data?.narrative || null,
+                        entityPersistence: 'still_here',
+                        hiddenDetail
+                    });
+                } else {
+                    result = await generateGameTurn(context, recentNarratives, {
+                        existingRoomNarrative: currentNode.data?.narrative || null,
+                        entityPersistence: 'gone',
+                        hiddenDetail
+                    });
+                }
+            } else {
+                // Totally clean node
+                result = { ...currentNode.data! };
+                reusedFromCache = true;
+                if (result.event === 'item_found' || result.event === 'level_transport') {
+                    result.event = 'none';
+                    result.eventDetail = '';
+                }
             }
         }
-    }
-    else {
-        // GENERIC or ACTION or LOOT FOUND
-        result = await generateGameTurn(context, recentNarratives, {
-            isLookAround: isLookAround,
-            existingRoomNarrative: currentNode?.data?.narrative || null,
-            nearbyEntities: nearbyEntities,
-            foundItem: forcedLoot,
-            hiddenDetail,
-            activeEncounterType: currentEncounter
-        });
+        else {
+            // GENERIC or ACTION or LOOT FOUND
+            result = await generateGameTurn(context, recentNarratives, {
+                isLookAround: isLookAround,
+                existingRoomNarrative: currentNode?.data?.narrative || null,
+                nearbyEntities: nearbyEntities,
+                foundItem: forcedLoot,
+                hiddenDetail,
+                activeEncounterType: currentEncounter
+            });
+        }
+    } catch (error) {
+        setIsLoading(false);
+        const errorMessage = error instanceof Error ? error.message : 'Connection Failed';
+        addLog(`The reality glitches... (${errorMessage})`, "system");
+        return;
     }
 
     setIsLoading(false);
@@ -606,7 +613,6 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!gameStarted) {
         addLog("Welcome to the Liminal Archives.", "system");
-        addLog("Ensure your API Key is set.", "system");
     }
   }, []);
 

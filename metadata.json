@@ -2,5 +2,7 @@
   "name": "The Backrooms: Liminal Archives",
   "description": "A text-based survival horror RPG powered by Gemini 2.5. Navigate the infinite mono-yellow madness, manage your sanity, and avoid entities.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
